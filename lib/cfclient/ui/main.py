@@ -52,6 +52,7 @@ from cfclient.utils.input import JoystickReader
 from cfclient.utils.guiconfig import GuiConfig
 from cfclient.utils.logconfigreader import LogConfigReader
 from cfclient.utils.config_manager import ConfigManager
+from cfclient.utils.lcmbridge import LCMBridge
 
 import cfclient.ui.toolboxes
 import cfclient.ui.tabs
@@ -196,8 +197,11 @@ class MainUI(QtGui.QMainWindow, main_window_class):
 
         # Connection callbacks and signal wrappers for UI protection
         self.cf.connected.add_callback(self.connectionDoneSignal.emit)
+        self.cf.connected.add_callback(self.start_lcm_bridge)
+
         self.connectionDoneSignal.connect(self.connectionDone)
         self.cf.disconnected.add_callback(self.disconnectedSignal.emit)
+        self.cf.disconnected.add_callback(self.stop_lcm_bridge)
         self.disconnectedSignal.connect(
                         lambda linkURI: self.setUIState(UIState.DISCONNECTED,
                                                         linkURI))
@@ -283,6 +287,15 @@ class MainUI(QtGui.QMainWindow, main_window_class):
                     t.toggle()
         except Exception as e:
             logger.warning("Exception while opening tabs [%s]", e)
+
+        # start the lcm bridge
+        self.lcm_bridge = LCMBridge(self.cf,"crazyflie_input")
+
+    def start_lcm_bridge(self, link_uri):
+        self.lcm_bridge.start()
+
+    def stop_lcm_bridge(self, link_uri):
+        self.lcm_bridge.stop()
 
     def setUIState(self, newState, linkURI=""):
         self.uiState = newState

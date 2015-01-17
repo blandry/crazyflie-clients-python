@@ -33,6 +33,7 @@ __author__ = 'Bitcraze AB'
 __all__ = ['FlightTab']
 
 import sys
+import struct
 
 import logging
 logger = logging.getLogger(__name__)
@@ -44,6 +45,7 @@ from PyQt4.QtCore import Qt, pyqtSlot, pyqtSignal, QThread, SIGNAL
 from PyQt4.QtGui import QMessageBox
 
 from cflib.crazyflie import Crazyflie
+from cflib.crtp.crtpstack import CRTPPacket, CRTPPort
 
 from cfclient.ui.widgets.ai import AttitudeIndicator
 
@@ -108,6 +110,8 @@ class FlightTab(Tab, flight_tab_class):
         self.helper.inputDeviceReader.althold_updated.add_callback(
                     lambda enabled: self.helper.cf.param.set_value("flightmode.althold", enabled))
 
+        self.helper.inputDeviceReader.lcmmode_updated.add_callback(self._lcmmode_data_received)
+
         self._imu_data_signal.connect(self._imu_data_received)
         self._baro_data_signal.connect(self._baro_data_received)
         self._althold_data_signal.connect(self._althold_data_received)
@@ -138,6 +142,9 @@ class FlightTab(Tab, flight_tab_class):
                              lambda enabled:
                              self.helper.cf.param.set_value("flightmode.x",
                                                             str(enabled)))
+
+        self.LCMCheckBox.toggled.connect(self._lcm_mode_checkbox_changed)
+
         self.helper.cf.param.add_update_callback(
                         group="flightmode", name="xmode",
                         cb=( lambda name, checked:
@@ -213,9 +220,18 @@ class FlightTab(Tab, flight_tab_class):
                 self.ai.setHover(target)    
             elif self.targetASL.isEnabled():
                 self.targetASL.setEnabled(False)
-                self.targetASL.setText("Not set")   
-                self.ai.setHover(0)    
-        
+                self.targetASL.setText("Not set")
+                self.ai.setHover(0)
+
+    def _lcm_mode_checkbox_changed(self, checked):
+        pk = CRTPPacket()
+        pk.port = CRTPPort.SUPERVISOR
+        pk.data = struct.pack('<H', int(checked))
+        self.helper.cf.send_packet(pk)
+
+    def _lcmmode_data_received(self, enabled):
+        self.LCMCheckBox.setChecked(enabled)
+
     def _imu_data_received(self, timestamp, data, logconf):
         if self.isVisible():
             self.actualRoll.setText(("%.2f" % data["stabilizer.roll"]))

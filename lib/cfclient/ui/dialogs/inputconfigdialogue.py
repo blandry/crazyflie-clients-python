@@ -91,7 +91,9 @@ class InputConfigDialogue(QtGui.QWidget, inputconfig_widget_class):
         self.detectExitapp.clicked.connect(lambda : self.doButtonDetect("exitapp", "Exit application",
                                                     "Press the button for the exiting the application"))
         self.detectAltHold.clicked.connect(lambda : self.doButtonDetect("althold", "Altitude hold",
-                                                    "Press the button for altitude hold mode activation (releasing returns to manual mode)"))        
+                                                    "Press the button for altitude hold mode activation (releasing returns to manual mode)"))
+        self.detectLCM.clicked.connect(lambda : self.doButtonDetect("lcmmode", "LCM mode",
+                                                    "Press the button you want to use to toggle the LCM mode"))
 
         self.configButton.clicked.connect(self.startConfigOfInputDevice)
         self.loadButton.clicked.connect(self.loadConfig)
@@ -104,7 +106,7 @@ class InputConfigDialogue(QtGui.QWidget, inputconfig_widget_class):
                               self.detectPitchPos, self.detectPitchNeg,
                               self.detectRollPos, self.detectRollNeg,
                               self.detectKillswitch, self.detectExitapp,
-                              self.detectAltHold]
+                              self.detectAltHold, self.detectLCM]
 
         self._reset_mapping()
         self.btnDetect = ""
@@ -129,6 +131,7 @@ class InputConfigDialogue(QtGui.QWidget, inputconfig_widget_class):
             "killswitch": {"id":-1, "indicator": self.killswitch},
             "exitapp": {"id":-1, "indicator": self.exitapp},
             "althold": {"id":-1, "indicator": self.althold},
+            "lcmmode": {"id":-1, "indicator": self.lcmmode},
             }
 
         self.axismapping = {
@@ -295,6 +298,8 @@ class InputConfigDialogue(QtGui.QWidget, inputconfig_widget_class):
             newKey = "exitapp"
         if ("althold" in key):
             newKey = "althold"
+        if ("lcmmode" in key):
+            newKey = "lcmmode"
         if (len(newKey) > 0):
             self.buttonmapping[newKey]['id'] = btnId
         else:
@@ -380,8 +385,11 @@ class InputConfigDialogue(QtGui.QWidget, inputconfig_widget_class):
                 
             if ("althold" in a):
                 newC['key'] = "althold"
-                newC['name'] = a               
-                
+                newC['name'] = a
+
+            if ("lcmmode" in a):
+                newC['key'] = "lcmmode"
+                newC['name'] = a
 
             inputConfig['inputdevice']['axis'].append(newC)
 

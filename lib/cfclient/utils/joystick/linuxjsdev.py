@@ -109,7 +109,7 @@ class Joystick():
         """
         Open the joystick device. The device_id is given by available_devices
         """
-        self.data = {"roll":0.0, "pitch":0.0, "yaw":0.0, "thrust":-1.0, "pitchcal":0.0, "rollcal":0.0, "estop": False, "exit":False, "althold":False}
+        self.data = {"roll":0.0, "pitch":0.0, "yaw":0.0, "thrust":-1.0, "pitchcal":0.0, "rollcal":0.0, "estop": False, "exit":False, "althold":False,  "lcmmode": False}
         self._prev_pressed = {"pitchNeg": False, "rollNeg": False,
                               "pitchPos": False, "rollPos": False}
         self.inputMap = inputMap
@@ -228,7 +228,7 @@ class Joystick():
         # Since all the values are re-calculated each time on Linux
         # since it's not event driven we can zero everything to make it
         # easier to handle split axis (ie two axis affecting the same parameter)
-        self.data = {"roll":0.0, "pitch":0.0, "yaw":0.0, "thrust":0.0, "pitchcal":0.0, "rollcal":0.0, "estop": False, "exit":False, "althold":False}
+        self.data = {"roll":0.0, "pitch":0.0, "yaw":0.0, "thrust":0.0, "pitchcal":0.0, "rollcal":0.0, "estop": False, "exit":False, "althold":False, "lcmmode": False}
 
         i = 0
         for a in self.axes:
@@ -261,6 +261,8 @@ class Joystick():
                             self.data["exit"] = True
                         elif (key == "althold"):
                             self.data["althold"] = not self.data["althold"]
+                        elif (key == "lcmmode"):
+                            self.data["lcmmode"] = True
                         else: # Generic cal for pitch/roll
                             # Workaround for event vs poll
                             name = self.inputMap[index]["name"]
@@ -274,6 +276,8 @@ class Joystick():
                         key = self.inputMap[index]["key"]
                         if (key == "althold"):
                             self.data["althold"] = False
+                        if (key == "lcmmode"):
+                            self.data["lcmmode"] = False
                         # Workaround for event vs poll
                         name = self.inputMap[index]["name"]
                         if self._prev_pressed[name]:

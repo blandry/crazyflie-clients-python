@@ -88,6 +88,9 @@ class JoystickReader:
         self._old_alt_hold = False
         self._springy_throttle = True
 
+	self._old_lcmmode = False
+        self._lcmmode_enabled = False
+
         self._trim_roll = Config().get("trim_roll")
         self._trim_pitch = Config().get("trim_pitch")
 
@@ -149,6 +152,7 @@ class JoystickReader:
         self.device_discovery = Caller()
         self.device_error = Caller()
         self.althold_updated = Caller()
+        self.lcmmode_updated = Caller()
 
     def setAltHoldAvailable(self, available):
         self._has_pressure_sensor = available
@@ -261,6 +265,7 @@ class JoystickReader:
             trim_roll = data["rollcal"]
             trim_pitch = data["pitchcal"]
             althold = data["althold"]
+            lcmmode = data["lcmmode"]
 
             if (self._old_alt_hold != althold):
                 self.althold_updated.call(str(althold))
@@ -269,6 +274,15 @@ class JoystickReader:
             if self._emergency_stop != emergency_stop:
                 self._emergency_stop = emergency_stop
                 self.emergency_stop_updated.call(self._emergency_stop)
+
+	    if lcmmode != self._old_lcmmode:
+                if lcmmode:
+                    if self._lcmmode_enabled:
+                        self._lcmmode_enabled = False
+                    else:
+                        self._lcmmode_enabled = True
+                    self.lcmmode_updated.call(self._lcmmode_enabled)
+                self._old_lcmmode = lcmmode
 
             # Thust limiting (slew, minimum and emergency stop)
             if self._springy_throttle:
