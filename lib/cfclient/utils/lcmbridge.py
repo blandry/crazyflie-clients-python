@@ -2,7 +2,7 @@ import lcm
 import threading
 import struct
 
-from crazyflie_t import crazyflie_thrust_t
+from crazyflie_t import crazyflie_input_t
 from cflib.crtp.crtpstack import CRTPPacket, CRTPPort
 
 class LCMBridge(object):
@@ -34,8 +34,8 @@ class LCMBridge(object):
 
   @staticmethod
   def handle_msg(channel,data,cf):
-    msg = crazyflie_thrust_t.decode(data)
+    msg = crazyflie_input_t.decode(data)
     pk = CRTPPacket()
     pk.port = CRTPPort.OFFBOARDCTRL
-    pk.data = struct.pack('<HHHH', int(msg.thrust1)+32768,int(msg.thrust2)+32768,int(msg.thrust3)+32768,int(msg.thrust4)+32768)
+    pk.data = struct.pack('<4ds',msg.input,msg.type)
     cf.send_packet(pk)
