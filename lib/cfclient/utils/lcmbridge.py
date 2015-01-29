@@ -37,5 +37,5 @@ class LCMBridge(object):
     msg = crazyflie_input_t.decode(data)
     pk = CRTPPacket()
     pk.port = CRTPPort.OFFBOARDCTRL
-    pk.data = struct.pack('<4ds',msg.input,msg.type)
+    pk.data = struct.pack('<4f',float(msg.input[0]),float(msg.input[1]),float(msg.input[2]),float(msg.input[3]))
     cf.send_packet(pk)
