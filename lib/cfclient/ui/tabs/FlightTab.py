@@ -38,6 +38,9 @@ import struct
 import logging
 logger = logging.getLogger(__name__)
 
+import lcm
+from crazyflie_t import crazyflie_imu_t
+
 from time import time
 
 from PyQt4 import QtCore, QtGui, uic
@@ -181,6 +184,8 @@ class FlightTab(Tab, flight_tab_class):
         self.targetCalPitch.setValue(GuiConfig().get("trim_pitch"))
         self.targetCalRoll.setValue(GuiConfig().get("trim_roll"))
 
+        self.lc = lcm.LCM()
+
     def thrustToPercentage(self, thrust):
         return ((thrust / MAX_THRUST) * 100.0)
 
@@ -233,20 +238,25 @@ class FlightTab(Tab, flight_tab_class):
         self.LCMCheckBox.setChecked(enabled)
 
     def _imu_data_received(self, timestamp, data, logconf):
-        if self.isVisible():
-            self.actualRoll.setText(("%.2f" % data["stabilizer.roll"]))
-            self.actualPitch.setText(("%.2f" % data["stabilizer.pitch"]))
-            self.actualYaw.setText(("%.2f" % data["stabilizer.yaw"]))
-            self.actualThrust.setText("%.2f%%" %
-                                      self.thrustToPercentage(
-                                                      data["stabilizer.thrust"]))
+        msg = crazyflie_imu_t()
+        msg.roll = data["stabilizer.roll"]
+        msg.pitch = data["stabilizer.pitch"]
+        msg.yaw = data["stabilizer.yaw"]
+        self.lc.publish("crazyflie_imu", msg.encode())
+        # if self.isVisible():
+        #     self.actualRoll.setText(("%.2f" % data["stabilizer.roll"]))
+        #     self.actualPitch.setText(("%.2f" % data["stabilizer.pitch"]))
+        #     self.actualYaw.setText(("%.2f" % data["stabilizer.yaw"]))
+        #     self.actualThrust.setText("%.2f%%" %
+        #                               self.thrustToPercentage(
+        #                                               data["stabilizer.thrust"]))
     
-            self.ai.setRollPitch(-data["stabilizer.roll"],
-                                 data["stabilizer.pitch"])
+        #     self.ai.setRollPitch(-data["stabilizer.roll"],
+        #                          data["stabilizer.pitch"])
 
     def connected(self, linkURI):
         # IMU & THRUST
-        lg = LogConfig("Stabalizer", GuiConfig().get("ui_update_period"))
+        lg = LogConfig("Stabalizer", 10) #GuiConfig().get("ui_update_period"))
         lg.add_variable("stabilizer.roll", "float")
         lg.add_variable("stabilizer.pitch", "float")
         lg.add_variable("stabilizer.yaw", "float")
@@ -261,21 +271,21 @@ class FlightTab(Tab, flight_tab_class):
             logger.warning("Could not setup logconfiguration after "
                            "connection!")
 
-        # MOTOR
-        lg = LogConfig("Motors", GuiConfig().get("ui_update_period"))
-        lg.add_variable("motor.m1")
-        lg.add_variable("motor.m2")
-        lg.add_variable("motor.m3")
-        lg.add_variable("motor.m4")
+        # # MOTOR
+        # lg = LogConfig("Motors", GuiConfig().get("ui_update_period"))
+        # lg.add_variable("motor.m1")
+        # lg.add_variable("motor.m2")
+        # lg.add_variable("motor.m3")
+        # lg.add_variable("motor.m4")
 
-        self.helper.cf.log.add_config(lg)
-        if lg.valid:
-            lg.data_received_cb.add_callback(self._motor_data_signal.emit)
-            lg.error_cb.add_callback(self._log_error_signal.emit)
-            lg.start()
-        else:
-            logger.warning("Could not setup logconfiguration after "
-                           "connection!")
+        # self.helper.cf.log.add_config(lg)
+        # if lg.valid:
+        #     lg.data_received_cb.add_callback(self._motor_data_signal.emit)
+        #     lg.error_cb.add_callback(self._log_error_signal.emit)
+        #     lg.start()
+        # else:
+        #     logger.warning("Could not setup logconfiguration after "
+        #                    "connection!")
             
     def _set_available_sensors(self, name, available):
         logger.info("[%s]: %s", name, available)
