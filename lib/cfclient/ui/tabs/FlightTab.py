@@ -238,38 +238,43 @@ class FlightTab(Tab, flight_tab_class):
         self.LCMCheckBox.setChecked(enabled)
 
     def _imu_data_received(self, timestamp, data, logconf):
-        msg = crazyflie_imu_t()
-        msg.roll = data["stabilizer.roll"]
-        msg.pitch = data["stabilizer.pitch"]
-        msg.yaw = data["stabilizer.yaw"]
-        self.lc.publish("crazyflie_imu", msg.encode())
-        # if self.isVisible():
-        #     self.actualRoll.setText(("%.2f" % data["stabilizer.roll"]))
-        #     self.actualPitch.setText(("%.2f" % data["stabilizer.pitch"]))
-        #     self.actualYaw.setText(("%.2f" % data["stabilizer.yaw"]))
-        #     self.actualThrust.setText("%.2f%%" %
-        #                               self.thrustToPercentage(
-        #                                               data["stabilizer.thrust"]))
+        if self.isVisible():
+            self.actualRoll.setText(("%.2f" % data["stabilizer.roll"]))
+            self.actualPitch.setText(("%.2f" % data["stabilizer.pitch"]))
+            self.actualYaw.setText(("%.2f" % data["stabilizer.yaw"]))
+            self.actualThrust.setText("%.2f%%" %
+                                      self.thrustToPercentage(
+                                                      data["stabilizer.thrust"]))
     
-        #     self.ai.setRollPitch(-data["stabilizer.roll"],
-        #                          data["stabilizer.pitch"])
+            self.ai.setRollPitch(-data["stabilizer.roll"],
+                                 data["stabilizer.pitch"])
+
+    def attitude_received(self, timestamp, data, logconf):
+        msg = crazyflie_imu_t()
+        msg.roll = data["attitude.roll"]
+        msg.pitch = data["attitude.pitch"]
+        msg.yaw = data["attitude.yaw"]
+        msg.rolld = data["attitude.rolld"]
+        msg.pitchd = data["attitude.pitchd"]
+        msg.yawd = data["attitude.yawd"]
+        self.lc.publish("crazyflie_imu", msg.encode())
 
     def connected(self, linkURI):
         # IMU & THRUST
-        lg = LogConfig("Stabalizer", 10) #GuiConfig().get("ui_update_period"))
-        lg.add_variable("stabilizer.roll", "float")
-        lg.add_variable("stabilizer.pitch", "float")
-        lg.add_variable("stabilizer.yaw", "float")
-        lg.add_variable("stabilizer.thrust", "uint16_t")
+        # lg = LogConfig("Stabalizer", GuiConfig().get("ui_update_period"))
+        # lg.add_variable("stabilizer.roll", "float")
+        # lg.add_variable("stabilizer.pitch", "float")
+        # lg.add_variable("stabilizer.yaw", "float")
+        # lg.add_variable("stabilizer.thrust", "uint16_t")
 
-        self.helper.cf.log.add_config(lg)
-        if (lg.valid):
-            lg.data_received_cb.add_callback(self._imu_data_signal.emit)
-            lg.error_cb.add_callback(self._log_error_signal.emit)
-            lg.start()
-        else:
-            logger.warning("Could not setup logconfiguration after "
-                           "connection!")
+        # self.helper.cf.log.add_config(lg)
+        # if (lg.valid):
+        #     lg.data_received_cb.add_callback(self._imu_data_signal.emit)
+        #     lg.error_cb.add_callback(self._log_error_signal.emit)
+        #     lg.start()
+        # else:
+        #     logger.warning("Could not setup logconfiguration after "
+        #                    "connection!")
 
         # # MOTOR
         # lg = LogConfig("Motors", GuiConfig().get("ui_update_period"))
@@ -286,7 +291,23 @@ class FlightTab(Tab, flight_tab_class):
         # else:
         #     logger.warning("Could not setup logconfiguration after "
         #                    "connection!")
-            
+        
+        lg = LogConfig("Attitude", 10)
+        lg.add_variable("attitude.roll", "float")
+        lg.add_variable("attitude.pitch", "float")
+        lg.add_variable("attitude.yaw", "float")
+        lg.add_variable("attitude.rolld", "float")
+        lg.add_variable("attitude.pitchd", "float")
+        lg.add_variable("attitude.yawd", "float")
+
+        self.helper.cf.log.add_config(lg)
+        if (lg.valid):
+            lg.data_received_cb.add_callback(self.attitude_received)
+            lg.start()
+        else:
+            logger.warning("Could not setup logconfiguration after "
+                           "connection!")
+
     def _set_available_sensors(self, name, available):
         logger.info("[%s]: %s", name, available)
         available = eval(available)
