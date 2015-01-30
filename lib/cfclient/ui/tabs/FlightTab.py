@@ -252,7 +252,7 @@ class FlightTab(Tab, flight_tab_class):
     def attitude_received(self, timestamp, data, logconf):
         msg = crazyflie_imu_t()
         msg.roll = data["attitude.roll"]
-        msg.pitch = data["attitude.pitch"]
+        msg.pitch = -data["attitude.pitch"] # note the negative sign here
         msg.yaw = data["attitude.yaw"]
         msg.rolld = data["attitude.rolld"]
         msg.pitchd = data["attitude.pitchd"]
