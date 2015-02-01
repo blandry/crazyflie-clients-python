@@ -33,6 +33,8 @@ __all__ = ['MainUI']
 
 import sys
 import logging
+import struct
+import lcm
 
 
 logger = logging.getLogger(__name__)
@@ -64,6 +66,9 @@ from cfclient.ui.dialogs.bootloader import BootloaderDialog
 from cfclient.ui.dialogs.about import AboutDialog
 
 from cflib.crazyflie.mem import MemoryElement
+
+from cflib.crtp.crtpstack import CRTPPacket, CRTPPort
+from crazyflie_t import crazyflie_imu_t
 
 (main_window_class,
 main_windows_base_class) = (uic.loadUiType(sys.path[0] +
@@ -290,6 +295,21 @@ class MainUI(QtGui.QMainWindow, main_window_class):
 
         # start the lcm bridge
         self.lcm_bridge = LCMBridge(self.cf,"crazyflie_input")
+
+        self.cf.add_port_callback(CRTPPort.SENSORS, self._new_sensor_data)
+
+        self.lc = lcm.LCM()
+
+    def _new_sensor_data(self, packet):
+        data = struct.unpack('<6f',packet.data)
+        msg = crazyflie_imu_t()
+        msg.roll = data[0]
+        msg.pitch = -data[1] # note the negative sign here
+        msg.yaw = data[2]
+        msg.rolld = data[3]
+        msg.pitchd = data[4]
+        msg.yawd = data[5]
+        self.lc.publish("crazyflie_imu", msg.encode())
 
     def start_lcm_bridge(self, link_uri):
         self.lcm_bridge.start()

@@ -292,21 +292,22 @@ class FlightTab(Tab, flight_tab_class):
         #     logger.warning("Could not setup logconfiguration after "
         #                    "connection!")
         
-        lg = LogConfig("Attitude", 10)
-        lg.add_variable("attitude.roll", "float")
-        lg.add_variable("attitude.pitch", "float")
-        lg.add_variable("attitude.yaw", "float")
-        lg.add_variable("attitude.rolld", "float")
-        lg.add_variable("attitude.pitchd", "float")
-        lg.add_variable("attitude.yawd", "float")
+        # lg = LogConfig("Attitude", 10)
+        # lg.add_variable("attitude.roll", "float")
+        # lg.add_variable("attitude.pitch", "float")
+        # lg.add_variable("attitude.yaw", "float")
+        # lg.add_variable("attitude.rolld", "float")
+        # lg.add_variable("attitude.pitchd", "float")
+        # lg.add_variable("attitude.yawd", "float")
 
-        self.helper.cf.log.add_config(lg)
-        if (lg.valid):
-            lg.data_received_cb.add_callback(self.attitude_received)
-            lg.start()
-        else:
-            logger.warning("Could not setup logconfiguration after "
-                           "connection!")
+        # self.helper.cf.log.add_config(lg)
+        # if (lg.valid):
+        #     lg.data_received_cb.add_callback(self.attitude_received)
+        #     lg.start()
+        # else:
+        #     logger.warning("Could not setup logconfiguration after "
+        #                    "connection!")
+        return
 
     def _set_available_sensors(self, name, available):
         logger.info("[%s]: %s", name, available)
@@ -318,34 +319,34 @@ class FlightTab(Tab, flight_tab_class):
             else:
                 self.actualASL.setEnabled(True)
                 self.helper.inputDeviceReader.setAltHoldAvailable(available)
-                if (not self.logBaro and not self.logAltHold):
-                    # The sensor is available, set up the logging
-                    self.logBaro = LogConfig("Baro", 200)
-                    self.logBaro.add_variable("baro.aslLong", "float")
+                # if (not self.logBaro and not self.logAltHold):
+                #     # The sensor is available, set up the logging
+                #     self.logBaro = LogConfig("Baro", 200)
+                #     self.logBaro.add_variable("baro.aslLong", "float")
 
-                    self.helper.cf.log.add_config(self.logBaro)
-                    if self.logBaro.valid:
-                        self.logBaro.data_received_cb.add_callback(
-                            self._baro_data_signal.emit)
-                        self.logBaro.error_cb.add_callback(
-                            self._log_error_signal.emit)
-                        self.logBaro.start()
-                    else:
-                        logger.warning("Could not setup logconfiguration after "
-                                       "connection!")            
-                    self.logAltHold = LogConfig("AltHold", 200)
-                    self.logAltHold.add_variable("altHold.target", "float")
+                #     self.helper.cf.log.add_config(self.logBaro)
+                #     if self.logBaro.valid:
+                #         self.logBaro.data_received_cb.add_callback(
+                #             self._baro_data_signal.emit)
+                #         self.logBaro.error_cb.add_callback(
+                #             self._log_error_signal.emit)
+                #         self.logBaro.start()
+                #     else:
+                #         logger.warning("Could not setup logconfiguration after "
+                #                        "connection!")            
+                #     self.logAltHold = LogConfig("AltHold", 200)
+                #     self.logAltHold.add_variable("altHold.target", "float")
 
-                    self.helper.cf.log.add_config(self.logAltHold)
-                    if self.logAltHold.valid:
-                        self.logAltHold.data_received_cb.add_callback(
-                            self._althold_data_signal.emit)
-                        self.logAltHold.error_cb.add_callback(
-                            self._log_error_signal.emit)
-                        self.logAltHold.start()
-                    else:
-                        logger.warning("Could not setup logconfiguration after "
-                                       "connection!")                        
+                #     self.helper.cf.log.add_config(self.logAltHold)
+                #     if self.logAltHold.valid:
+                #         self.logAltHold.data_received_cb.add_callback(
+                #             self._althold_data_signal.emit)
+                #         self.logAltHold.error_cb.add_callback(
+                #             self._log_error_signal.emit)
+                #         self.logAltHold.start()
+                #     else:
+                #         logger.warning("Could not setup logconfiguration after "
+                #                        "connection!")                        
 
     def disconnected(self, linkURI):
         self.ai.setRollPitch(0, 0)

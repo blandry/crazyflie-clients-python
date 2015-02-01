@@ -48,6 +48,7 @@ class CRTPPort:
     LOGGING = 0x05
     OFFBOARDCTRL = 0x06
     SUPERVISOR = 0x07
+    SENSORS = 0x08
     DEBUGDRIVER = 0x0E
     LINKCTRL = 0x0F
     ALL = 0xFF
