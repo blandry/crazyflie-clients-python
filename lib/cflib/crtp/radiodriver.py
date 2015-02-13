@@ -48,6 +48,7 @@ import re
 import array
 import binascii
 import struct
+import time
 
 from cflib.drivers.crazyradio import Crazyradio
 from usb import USBError
@@ -128,11 +129,17 @@ class RadioDriver(CRTPDriver):
         # Limited size out queue to avoid "ReadBack" effect
         self.out_queue = Queue.Queue(50)
 
+        # flag used to notified the driverthread to hold on
+        # (another thread might be using the usb device)
+        self.device_flag = threading.Event()
+        self.device_flag.set()
+
         # Launch the comm thread
         self._thread = _RadioDriverThread(self.cradio, self.in_queue,
                                           self.out_queue,
                                           link_quality_callback,
-                                          link_error_callback)
+                                          link_error_callback,
+                                          self.device_flag)
         self._thread.start()
 
         self.link_error_callback = link_error_callback
@@ -183,7 +190,8 @@ class RadioDriver(CRTPDriver):
         self._thread = _RadioDriverThread(self.cradio, self.in_queue,
                                           self.out_queue,
                                           self.link_quality_callback,
-                                          self.link_error_callback)
+                                          self.link_error_callback,
+                                          self.device_flag)
         self._thread.start()
 
     def close(self):
@@ -305,7 +313,7 @@ class _RadioDriverThread (threading.Thread):
     RETRYCOUNT_BEFORE_DISCONNECT = 10
 
     def __init__(self, cradio, inQueue, outQueue, link_quality_callback,
-                 link_error_callback):
+                 link_error_callback, device_flag):
         """ Create the object """
         threading.Thread.__init__(self)
         self.cradio = cradio
@@ -315,6 +323,7 @@ class _RadioDriverThread (threading.Thread):
         self.link_error_callback = link_error_callback
         self.link_quality_callback = link_quality_callback
         self.retryBeforeDisconnect = self.RETRYCOUNT_BEFORE_DISCONNECT
+        self.device_flag = device_flag
 
     def stop(self):
         """ Stop the thread """
@@ -333,6 +342,8 @@ class _RadioDriverThread (threading.Thread):
         while(True):
             if (self.sp):
                 break
+
+            self.device_flag.wait()
 
             try:
                 ackStatus = self.cradio.send_packet(dataOut)
